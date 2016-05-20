@@ -116,7 +116,7 @@ public class ReactCBLite extends ReactContextBaseJavaModule {
     }
 
     /**
-     * Function to be shared to React-native, it monitor a local database changes
+     * Function to be shared to React-native, it starts a local couchbase server and syncs with remote
      * @param  databaseLocal    String      database for local server
      * @param  onEnd            Callback    function to call when finish
      */
@@ -146,7 +146,7 @@ public class ReactCBLite extends ReactContextBaseJavaModule {
             throw new JavascriptException(e.getMessage());
         }
     }
-  
+
     /**
      * Function to be shared to React-native, copy a prebuild database if not exist
      * @param  databaseLocal           String      database for local server
@@ -172,16 +172,20 @@ public class ReactCBLite extends ReactContextBaseJavaModule {
                 Log.i(TAG, "Database not found, extracting initial dataset.");
                 try {
                     AssetManager assets = getReactApplicationContext().getAssets();
-                    InputStream cannedDb = assets.open("couchtalk.cblite");
+                    InputStream cannedDb = assets.open(withPreBuildDatabase+".cblite");
                     manager.replaceDatabase(databaseLocal, cannedDb, null);
                 } catch (IOException e) {
                     Log.e(TAG, String.format("Couldn't load canned database. %s", e));
                 }
                 // HACK: intentionally may remain `null` so app crashes instead of silent trouble…
                 _database = manager.getExistingDatabase(databaseLocal);
+                onEnd.invoke();
+            } else {
+                onEnd.invoke("database already exist");
             }
         } catch (CouchbaseLiteException e) {
             Log.e(TAG, "Cannot get database");
+            onEnd.invoke(e.getMessage());
             return;
         }
         final Database database = _database;

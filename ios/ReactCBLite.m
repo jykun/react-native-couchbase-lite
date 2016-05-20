@@ -14,6 +14,12 @@
 #import "CouchbaseLiteListener/CouchbaseLiteListener.h"
 #import "CBLRegisterJSViewCompiler.h"
 
+#define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
+#define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
+#define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN(v)                 ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN_OR_EQUAL_TO(v)     ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedDescending)
+
 @implementation ReactCBLite
 
 NSString* const DB_CHANGED = @"couchBaseDBEvent";
@@ -34,7 +40,9 @@ RCT_EXPORT_METHOD(init:(float)port username:(NSString *)username password:(NSStr
     CBLRegisterJSViewCompiler();
     
     CBLListener* listener = [[CBLListener alloc] initWithManager:dbmgr port:port];
-    [listener setPasswords:@{username: password}];
+    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"9.0")) {
+      [listener setPasswords:@{username: password}];
+    }
     [listener start:nil];
     
     NSLog(@"Couchbase Lite url = %@", listener.URL);
@@ -62,6 +70,7 @@ RCT_EXPORT_METHOD(monitorDatabase:(NSString *)databaseLocal callback:(RCTRespons
                                                       }
                                                   }
      ];
+    
      callback(@[[NSNull null]]);
 }
 

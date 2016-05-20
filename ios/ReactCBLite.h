@@ -7,6 +7,9 @@
 //
 
 #import <RCTBridgeModule.h>
+#import "RCTEventDispatcher.h"
+
+extern NSString* const DB_CHANGED;
 
 @interface ReactCBLite : NSObject <RCTBridgeModule>
 
