@@ -238,4 +238,30 @@ RCT_EXPORT_METHOD(upload:(NSString *)method
     });
 }
 
+RCT_EXPORT_METHOD(copyDatabase:(NSString *)databaseLocal withPreBuildDatabase:(NSString *)withPreBuildDatabase callback:(RCTResponseSenderBlock)callback)
+{
+    NSError *error;
+    CBLManager* dbManager = [CBLManager sharedInstance];
+    CBLDatabase* database = [dbManager existingDatabaseNamed:databaseLocal error: &error];
+    if (!database) {
+        NSString* cannedDbPath = [[NSBundle mainBundle] pathForResource: withPreBuildDatabase
+                                                                 ofType: @"cblite"];
+        BOOL ok = [dbManager replaceDatabaseNamed: databaseLocal
+                                 withDatabaseFile: cannedDbPath
+                                  withAttachments: nil
+                                            error: &error];
+        if (!ok) {
+            NSLog(@"database '%@' copy fail", databaseLocal);
+            callback(@[@"copy fail"]);
+        } else {
+            database = [dbManager existingDatabaseNamed: @"catalog" error: &error];
+            NSLog(@"database '%@' copy succ", databaseLocal);
+            callback(@[[NSNull null]]);
+        }
+    } else {
+        NSLog(@"database '%@' already exist", databaseLocal);
+        callback(@[@"database already exist"]);
+    }
+}
+
 @end

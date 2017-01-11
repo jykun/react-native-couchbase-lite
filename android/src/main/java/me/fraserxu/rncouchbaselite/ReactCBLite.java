@@ -2,6 +2,7 @@ package me.fraserxu.rncouchbaselite;
 
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.content.res.AssetManager;
 
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Manager;
@@ -12,6 +13,7 @@ import com.couchbase.lite.javascript.JavaScriptViewCompiler;
 import com.couchbase.lite.listener.Credentials;
 import com.couchbase.lite.listener.LiteListener;
 import com.couchbase.lite.util.Log;
+import com.couchbase.lite.CouchbaseLiteException;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -27,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -338,5 +341,49 @@ public class ReactCBLite extends ReactContextBaseJavaModule {
             this.statusCode = statusCode;
             this.response = response;
         }
+    }
+
+    /**
+     * Function to be shared to React-native, copy a prebuild database if not exist
+     * @param  databaseLocal           String      database for local server
+     * @param  withPreBuildDatabase    String      database for preBuild
+     * @param  onEnd                   Callback    function to call when finish
+     */
+    @ReactMethod
+    public void copyDatabase(String databaseLocal, String withPreBuildDatabase, Callback onEnd) {
+        // create a manager
+        Manager manager;
+        try {
+            manager = new Manager(new AndroidContext(getReactApplicationContext()), Manager.DEFAULT_OPTIONS);
+        } catch (IOException e) {
+            Log.e(TAG, "Cannot create manager object");
+            return;
+        }
+
+        // setup database (copying initial data if needed)
+        Database _database;
+        try {
+            _database = manager.getExistingDatabase(databaseLocal);
+            if (_database == null) {
+                Log.i(TAG, "Database not found, extracting initial dataset.");
+                try {
+                    AssetManager assets = getReactApplicationContext().getAssets();
+                    InputStream cannedDb = assets.open(withPreBuildDatabase+".cblite");
+                    manager.replaceDatabase(databaseLocal, cannedDb, null);
+                } catch (IOException e) {
+                    Log.e(TAG, String.format("Couldn't load canned database. %s", e));
+                }
+                // HACK: intentionally may remain `null` so app crashes instead of silent trouble…
+                _database = manager.getExistingDatabase(databaseLocal);
+                onEnd.invoke();
+            } else {
+                onEnd.invoke("database already exist");
+            }
+        } catch (CouchbaseLiteException e) {
+            Log.e(TAG, "Cannot get database");
+            onEnd.invoke(e.getMessage());
+            return;
+        }
+        final Database database = _database;
     }
 }
