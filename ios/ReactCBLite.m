@@ -4,7 +4,9 @@
 //
 //  Created by James Nocentini on 02/12/2015.
 //  Copyright © 2015 Couchbase. All rights reserved.
-//
+//NSString* cannedDbPath = [[NSBundle mainBundle] pathForResource: withPreBuildDatabase
+                                                                 ofType: @"cblite2"];
+         BOOL ok = [manager replaceDatabaseNamed:databaseLocal withDatabaseDir:cannedDbPath error:nil];
 
 #import "ReactCBLite.h"
 
@@ -245,11 +247,8 @@ RCT_EXPORT_METHOD(copyDatabase:(NSString *)databaseLocal withPreBuildDatabase:(N
     CBLDatabase* database = [dbManager existingDatabaseNamed:databaseLocal error: &error];
     if (!database) {
         NSString* cannedDbPath = [[NSBundle mainBundle] pathForResource: withPreBuildDatabase
-                                                                 ofType: @"cblite"];
-        BOOL ok = [dbManager replaceDatabaseNamed: databaseLocal
-                                 withDatabaseFile: cannedDbPath
-                                  withAttachments: nil
-                                            error: &error];
+                                                                 ofType: @"cblite2"];
+         BOOL ok = [manager replaceDatabaseNamed:databaseLocal withDatabaseDir:cannedDbPath error:nil];
         if (!ok) {
             NSLog(@"database '%@' copy fail", databaseLocal);
             callback(@[@"copy fail"]);
