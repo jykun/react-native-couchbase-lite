@@ -2,7 +2,6 @@ package me.fraserxu.rncouchbaselite;
 
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.content.res.AssetManager;
 
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Manager;
@@ -14,6 +13,7 @@ import com.couchbase.lite.listener.Credentials;
 import com.couchbase.lite.listener.LiteListener;
 import com.couchbase.lite.util.Log;
 import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.util.ZipUtils;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -367,13 +367,10 @@ public class ReactCBLite extends ReactContextBaseJavaModule {
             if (_database == null) {
                 Log.i(TAG, "Database not found, extracting initial dataset.");
                 try {
-                    AssetManager assets = getReactApplicationContext().getAssets();
-                    InputStream cannedDb = assets.open(withPreBuildDatabase+".cblite");
-                    manager.replaceDatabase(databaseLocal, cannedDb, null);
+                    ZipUtils.unzip(this.context.getAssets().open(withPreBuildDatabase + ".zip"), manager.getContext().getFilesDir());
                 } catch (IOException e) {
-                    Log.e(TAG, String.format("Couldn't load canned database. %s", e));
+                    e.printStackTrace();
                 }
-                // HACK: intentionally may remain `null` so app crashes instead of silent trouble…
                 _database = manager.getExistingDatabase(databaseLocal);
                 onEnd.invoke();
             } else {
