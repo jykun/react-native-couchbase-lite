@@ -4,9 +4,6 @@
 //
 //  Created by James Nocentini on 02/12/2015.
 //  Copyright © 2015 Couchbase. All rights reserved.
-//NSString* cannedDbPath = [[NSBundle mainBundle] pathForResource: withPreBuildDatabase
-                                                                 ofType: @"cblite2"];
-         BOOL ok = [manager replaceDatabaseNamed:databaseLocal withDatabaseDir:cannedDbPath error:nil];
 
 #import "ReactCBLite.h"
 
